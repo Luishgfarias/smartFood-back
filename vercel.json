@@ -2,10 +2,10 @@
   "name": "smartfood-back",
   "version": 2,
   "public": true,
-  "builds": {
+  "builds": [{
       "src": "app.js",
       "use": "@vercel/node"
-    },
+    }],
   "routes": [
     {
       "src": "/(.*)",
