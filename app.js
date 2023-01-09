@@ -12,7 +12,15 @@ const Entregador = require("./models/delivery");
 
 const app = express();
 
-app.use(express.json(), cors());
+app.use((req, res, next) => {
+	//Qual site tem permissão de realizar a conexão, no exemplo abaixo está o "*" indicando que qualquer site pode fazer a conexão
+    res.header("Access-Control-Allow-Origin", "*");
+	//Quais são os métodos que a conexão pode realizar na API
+    res.header("Access-Control-Allow-Methods", 'GET,PUT,POST,DELETE');
+    app.use(cors());
+    next();
+  });
+  app.use(express.json())
 
 app.post("/", (req, res) => {
  return res.status(200).json({
@@ -110,8 +118,8 @@ app.post("/auth/register/location", async (req, res) => {
 });
 
 app.post("/auth/login/location", async (req, res) => {
+  console.log(req.body);
   const {email, password} = req.body
-
   if (!email) {
     return res.status(422).json({
       res: "Email é obrigatório",
