@@ -289,7 +289,7 @@ mogoose
     `mongodb+srv://${DB_USER}:${DB_PASSWORD}@cluster0.pdngdnm.mongodb.net/?retryWrites=true&w=majority`
   )
   .then(() => {
-    app.listen(8000);
+    app.listen(process.env.PORT || 8000);
     console.log("Conectou");
   })
   .catch((err) => {
