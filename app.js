@@ -9,6 +9,7 @@ const { json } = require("express/lib/response");
 const { default: mongoose } = require("mongoose");
 const User = require("./models/user");
 const Entregador = require("./models/delivery");
+const Estabelecimento = require("./models/location");
 
 const app = express();
 
@@ -82,7 +83,7 @@ app.post("/auth/register/location", async (req, res) => {
       res: "As senhas não batem",
     });
   }
-  const userExist = await User.findOne({email: email})
+  const userExist = await Estabelecimento.findOne({email: email})
 
   if (userExist) {
     return res.status(422).json({
@@ -93,7 +94,7 @@ app.post("/auth/register/location", async (req, res) => {
   const salt = await bscrypt.genSalt(12)
   const passwordHash = await bscrypt.hash(password, salt)
 
-  const user = new User({
+  const user = new Estabelecimento({
     name, 
     email, 
     password: passwordHash,
@@ -131,7 +132,7 @@ app.post("/auth/login/location", async (req, res) => {
     });
   }
 
-  const userExist = await User.findOne({email: email})
+  const userExist = await Estabelecimento.findOne({email: email})
 
   if (!userExist) {
     return res.status(404).json({
@@ -269,8 +270,112 @@ app.post("/auth/login/delivery", async (req, res) => {
   }
 })
 
+app.post("/auth/register/user", async (req, res) => {
+  const { name, email, password, confirmPassword } = req.body;
+
+  if (!email) {
+    return res.status(422).json({
+      res: "Email é obrigatório",
+    });
+  }
+  if (!password) {
+    return res.status(422).json({
+      res: "Password é obrigatório",
+    });
+  }
+  if (!confirmPassword) {
+    return res.status(422).json({
+      res: "ConfirmPassword é obrigatório",
+    });
+  }
+  if (!(password === confirmPassword)) {
+    return res.status(422).json({
+      res: "As senhas não batem",
+    });
+  }
+  const userExist = await User.findOne({email: email})
+
+  if (userExist) {
+    return res.status(422).json({
+      res: "Email já registrado, Use outro",
+    });
+  }
+
+  const salt = await bscrypt.genSalt(12)
+  const passwordHash = await bscrypt.hash(password, salt)
+
+  const user = new User({
+    name,
+    email, 
+    password: passwordHash
+  })
+
+  try {
+   await user.save()
+
+    return res.status(201).json({
+        res: "Usuário criado com sucesso",
+      });
+  } catch (error) {
+    console.log(error)
+      return res.status(500).json({
+        res: "deu errado",
+      });
+  }
+
+});
+
+app.post("/auth/login/user", async (req, res) => {
+  const {email, password} = req.body
+
+  if (!email) {
+    return res.status(422).json({
+      res: "Email é obrigatório",
+    });
+  }
+  if (!password) {
+    return res.status(422).json({
+      res: "Password é obrigatório",
+    });
+  }
+
+  const userExist = await User.findOne({email: email})
+
+  if (!userExist) {
+    return res.status(404).json({
+      res: "Usuáriio não encontrado",
+    });
+  }
+
+  const checkPassword = await bscrypt.compare(password, userExist.password)
+  if (!checkPassword) {
+    return res.status(422).json({
+      res: "Senha Invalida",
+    });
+  }
+
+  try {
+
+    const secret = process.env.SECRET
+
+    const token = jwt.sign({
+      id: userExist._id
+    }, secret)
+
+    res.status(200).json({
+      res:'sucesso', token
+    })
+    
+  } catch (error) {
+    console.log(error)
+      return res.status(500).json({
+        res: "deu errado",
+      });
+  }
+})
+
 app.get('/user/:id', checkToken, async (req, res) => {
-  const user = await User.findById(req.params.id, '-password')
+  const user = await Estabelecimento.findById(req.params.id, '-password')
 
   if (!user) {
     return res.status(404).json({
