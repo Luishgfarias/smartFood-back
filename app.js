@@ -385,6 +385,17 @@ app.get('/user/:id', checkToken, async (req, res) => {
 
   res.status(200).json({ user })
 })
+app.get('/location/list', async (req, res) => {
+  const list = await Estabelecimento.find()
+
+  if (!list) {
+    return res.status(404).json({
+      res: "Usuário não encontrado",
+    });
+  }
+
+  res.status(200).json({ list })
+})
 
 const DB_USER = process.env.DB_USER;
 const DB_PASSWORD = process.env.DB_PASS;
