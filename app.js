@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 
 app.post("/", (req, res) => {
  return res.status(200).json({
-    res: req.body,
+    res: 'Bem vindo'
   });
 });
 
