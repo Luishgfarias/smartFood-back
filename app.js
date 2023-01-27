@@ -30,7 +30,7 @@ app.use(express.json());
 
 app.post("/", (req, res) => {
   return res.status(200).json({
-    res: "Bem vindo",
+    res: "Bem vindo!",
   });
 });
 
