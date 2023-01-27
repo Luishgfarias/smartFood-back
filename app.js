@@ -14,10 +14,6 @@ const Estabelecimento = require("./models/location");
 const app = express();
 
 app.use((req, res, next) => {
-  //Qual site tem permissão de realizar a conexão, no exemplo abaixo está o "*" indicando que qualquer site pode fazer a conexão
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  //Quais são os métodos que a conexão pode realizar na API
-  res.setHeader("Access-Control-Allow-Methods", "*");
   app.use(
     cors({
       origin: "*",
