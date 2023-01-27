@@ -3,7 +3,7 @@ const express = require("express");
 const mogoose = require("mongoose");
 const bscrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const cors = require('cors')
+const cors = require("cors");
 const { json } = require("express/lib/response");
 
 const { default: mongoose } = require("mongoose");
@@ -14,45 +14,44 @@ const Estabelecimento = require("./models/location");
 const app = express();
 
 app.use((req, res, next) => {
-	//Qual site tem permissão de realizar a conexão, no exemplo abaixo está o "*" indicando que qualquer site pode fazer a conexão
-    res.header("Access-Control-Allow-Origin", "*");
-	//Quais são os métodos que a conexão pode realizar na API
-    res.header("Access-Control-Allow-Methods", "*");
-    app.use(cors({
-      origin: "*",
-        methods: "*"
-    }));
-    next();
-  });
-  app.use(express.json())
+  res.setHeader('Access-Control-Allow-Credentials', true)
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  // another common pattern
+  // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+  next();
+});
+app.use(express.json());
 
 app.post("/", (req, res) => {
- return res.status(200).json({
-    res: 'Bem vindo'
+  return res.status(200).json({
+    res: "Bem vindo",
   });
 });
 
-function checkToken (req, res, next) {
-  const authHeader = req.headers['authorization']
+function checkToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
 
-  const token = authHeader && authHeader.split(' ')[1]
+  const token = authHeader && authHeader.split(" ")[1];
 
-  if(!token){
+  if (!token) {
     res.status(401).json({
       res: "Acesso Não autorizado",
     });
   }
 
   try {
-    
-    const secret = process.env.SECRET
-    
-    jwt.verify(token, secret)
-    
-    next()
+    const secret = process.env.SECRET;
 
+    jwt.verify(token, secret);
+
+    next();
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(401).json({
       res: "Token Não autorizado",
     });
@@ -60,7 +59,15 @@ function checkToken (req, res, next) {
 }
 
 app.post("/auth/register/location", async (req, res) => {
-  const { name, email, password, confirmPassword, establishment, image, address } = req.body;
+  const {
+    name,
+    email,
+    password,
+    confirmPassword,
+    establishment,
+    image,
+    address,
+  } = req.body;
   if (!name) {
     return res.status(422).json({
       res: "Nome é obrigatório",
@@ -86,7 +93,7 @@ app.post("/auth/register/location", async (req, res) => {
       res: "As senhas não batem",
     });
   }
-  const userExist = await Estabelecimento.findOne({email: email})
+  const userExist = await Estabelecimento.findOne({ email: email });
 
   if (userExist) {
     return res.status(422).json({
@@ -94,36 +101,35 @@ app.post("/auth/register/location", async (req, res) => {
     });
   }
 
-  const salt = await bscrypt.genSalt(12)
-  const passwordHash = await bscrypt.hash(password, salt)
+  const salt = await bscrypt.genSalt(12);
+  const passwordHash = await bscrypt.hash(password, salt);
 
   const user = new Estabelecimento({
-    name, 
-    email, 
+    name,
+    email,
     password: passwordHash,
     establishment,
     image,
-    address
-  })
+    address,
+  });
 
   try {
-   await user.save()
+    await user.save();
 
     return res.status(201).json({
-        res: "Usuário criado com sucesso",
-      });
+      res: "Usuário criado com sucesso",
+    });
   } catch (error) {
-    console.log(error)
-      return res.status(500).json({
-        res: "deu errado",
-      });
+    console.log(error);
+    return res.status(500).json({
+      res: "deu errado",
+    });
   }
-
 });
 
 app.post("/auth/login/location", async (req, res) => {
   console.log(req.body);
-  const {email, password} = req.body
+  const { email, password } = req.body;
   if (!email) {
     return res.status(422).json({
       res: "Email é obrigatório",
@@ -135,7 +141,7 @@ app.post("/auth/login/location", async (req, res) => {
     });
   }
 
-  const userExist = await Estabelecimento.findOne({email: email})
+  const userExist = await Estabelecimento.findOne({ email: email });
 
   if (!userExist) {
     return res.status(404).json({
@@ -143,7 +149,7 @@ app.post("/auth/login/location", async (req, res) => {
     });
   }
 
-  const checkPassword = await bscrypt.compare(password, userExist.password)
+  const checkPassword = await bscrypt.compare(password, userExist.password);
   if (!checkPassword) {
     return res.status(422).json({
       res: "Senha Invalida",
@@ -151,24 +157,26 @@ app.post("/auth/login/location", async (req, res) => {
   }
 
   try {
+    const secret = process.env.SECRET;
 
-    const secret = process.env.SECRET
-
-    const token = jwt.sign({
-      id: userExist._id
-    }, secret)
+    const token = jwt.sign(
+      {
+        id: userExist._id,
+      },
+      secret
+    );
 
     res.status(200).json({
-      res:'sucesso', token
-    })
-    
+      res: "sucesso",
+      token,
+    });
   } catch (error) {
-    console.log(error)
-      return res.status(500).json({
-        res: "deu errado",
-      });
+    console.log(error);
+    return res.status(500).json({
+      res: "deu errado",
+    });
   }
-})
+});
 
 app.post("/auth/register/delivery", async (req, res) => {
   const { email, password, confirmPassword } = req.body;
@@ -193,7 +201,7 @@ app.post("/auth/register/delivery", async (req, res) => {
       res: "As senhas não batem",
     });
   }
-  const userExist = await Entregador.findOne({email: email})
+  const userExist = await Entregador.findOne({ email: email });
 
   if (userExist) {
     return res.status(422).json({
@@ -201,31 +209,30 @@ app.post("/auth/register/delivery", async (req, res) => {
     });
   }
 
-  const salt = await bscrypt.genSalt(12)
-  const passwordHash = await bscrypt.hash(password, salt)
+  const salt = await bscrypt.genSalt(12);
+  const passwordHash = await bscrypt.hash(password, salt);
 
   const user = new Entregador({
-    email, 
-    password: passwordHash
-  })
+    email,
+    password: passwordHash,
+  });
 
   try {
-   await user.save()
+    await user.save();
 
     return res.status(201).json({
-        res: "Usuário criado com sucesso",
-      });
+      res: "Usuário criado com sucesso",
+    });
   } catch (error) {
-    console.log(error)
-      return res.status(500).json({
-        res: "deu errado",
-      });
+    console.log(error);
+    return res.status(500).json({
+      res: "deu errado",
+    });
   }
-
 });
 
 app.post("/auth/login/delivery", async (req, res) => {
-  const {email, password} = req.body
+  const { email, password } = req.body;
 
   if (!email) {
     return res.status(422).json({
@@ -238,7 +245,7 @@ app.post("/auth/login/delivery", async (req, res) => {
     });
   }
 
-  const userExist = await Entregador.findOne({email: email})
+  const userExist = await Entregador.findOne({ email: email });
 
   if (!userExist) {
     return res.status(404).json({
@@ -246,7 +253,7 @@ app.post("/auth/login/delivery", async (req, res) => {
     });
   }
 
-  const checkPassword = await bscrypt.compare(password, userExist.password)
+  const checkPassword = await bscrypt.compare(password, userExist.password);
   if (!checkPassword) {
     return res.status(422).json({
       res: "Senha Invalida",
@@ -254,24 +261,26 @@ app.post("/auth/login/delivery", async (req, res) => {
   }
 
   try {
+    const secret = process.env.SECRET;
 
-    const secret = process.env.SECRET
-
-    const token = jwt.sign({
-      id: userExist._id
-    }, secret)
+    const token = jwt.sign(
+      {
+        id: userExist._id,
+      },
+      secret
+    );
 
     res.status(200).json({
-      res:'sucesso', token
-    })
-    
+      res: "sucesso",
+      token,
+    });
   } catch (error) {
-    console.log(error)
-      return res.status(500).json({
-        res: "deu errado",
-      });
+    console.log(error);
+    return res.status(500).json({
+      res: "deu errado",
+    });
   }
-})
+});
 
 app.post("/auth/register/user", async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
@@ -296,7 +305,7 @@ app.post("/auth/register/user", async (req, res) => {
       res: "As senhas não batem",
     });
   }
-  const userExist = await User.findOne({email: email})
+  const userExist = await User.findOne({ email: email });
 
   if (userExist) {
     return res.status(422).json({
@@ -304,32 +313,31 @@ app.post("/auth/register/user", async (req, res) => {
     });
   }
 
-  const salt = await bscrypt.genSalt(12)
-  const passwordHash = await bscrypt.hash(password, salt)
+  const salt = await bscrypt.genSalt(12);
+  const passwordHash = await bscrypt.hash(password, salt);
 
   const user = new User({
     name,
-    email, 
-    password: passwordHash
-  })
+    email,
+    password: passwordHash,
+  });
 
   try {
-   await user.save()
+    await user.save();
 
     return res.status(201).json({
-        res: "Usuário criado com sucesso",
-      });
+      res: "Usuário criado com sucesso",
+    });
   } catch (error) {
-    console.log(error)
-      return res.status(500).json({
-        res: "deu errado",
-      });
+    console.log(error);
+    return res.status(500).json({
+      res: "deu errado",
+    });
   }
-
 });
 
 app.post("/auth/login/user", async (req, res) => {
-  const {email, password} = req.body
+  const { email, password } = req.body;
 
   if (!email) {
     return res.status(422).json({
@@ -342,7 +350,7 @@ app.post("/auth/login/user", async (req, res) => {
     });
   }
 
-  const userExist = await User.findOne({email: email})
+  const userExist = await User.findOne({ email: email });
 
   if (!userExist) {
     return res.status(404).json({
@@ -350,7 +358,7 @@ app.post("/auth/login/user", async (req, res) => {
     });
   }
 
-  const checkPassword = await bscrypt.compare(password, userExist.password)
+  const checkPassword = await bscrypt.compare(password, userExist.password);
   if (!checkPassword) {
     return res.status(422).json({
       res: "Senha Invalida",
@@ -358,27 +366,29 @@ app.post("/auth/login/user", async (req, res) => {
   }
 
   try {
+    const secret = process.env.SECRET;
 
-    const secret = process.env.SECRET
-
-    const token = jwt.sign({
-      id: userExist._id
-    }, secret)
+    const token = jwt.sign(
+      {
+        id: userExist._id,
+      },
+      secret
+    );
 
     res.status(200).json({
-      res:'sucesso', token
-    })
-    
+      res: "sucesso",
+      token,
+    });
   } catch (error) {
-    console.log(error)
-      return res.status(500).json({
-        res: "deu errado",
-      });
+    console.log(error);
+    return res.status(500).json({
+      res: "deu errado",
+    });
   }
-})
+});
 
-app.get('/user/:id', checkToken, async (req, res) => {
-  const user = await Estabelecimento.findById(req.params.id, '-password')
+app.get("/user/:id", checkToken, async (req, res) => {
+  const user = await Estabelecimento.findById(req.params.id, "-password");
 
   if (!user) {
     return res.status(404).json({
@@ -386,10 +396,10 @@ app.get('/user/:id', checkToken, async (req, res) => {
     });
   }
 
-  res.status(200).json({ user })
-})
-app.get('/location/list', async (req, res) => {
-  const list = await Estabelecimento.find()
+  res.status(200).json({ user });
+});
+app.get("/location/list", async (req, res) => {
+  const list = await Estabelecimento.find();
 
   if (!list) {
     return res.status(404).json({
@@ -397,12 +407,12 @@ app.get('/location/list', async (req, res) => {
     });
   }
 
-  res.status(200).json({ list })
-})
+  res.status(200).json({ list });
+});
 
 const DB_USER = process.env.DB_USER;
 const DB_PASSWORD = process.env.DB_PASS;
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 mogoose
   .connect(
     `mongodb+srv://${DB_USER}:${DB_PASSWORD}@cluster0.pdngdnm.mongodb.net/?retryWrites=true&w=majority`
