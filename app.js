@@ -13,13 +13,8 @@ const Estabelecimento = require("./models/location");
 
 const app = express();
 
-app.use((req, res, next) => {
-  app.use(cors({
-    origin: '*',
-    methods: '*'
-  }));
-  next();
-});
+app.use(cors());
+app.options('*', cors());
 app.use(express.json());
 
 app.post("/", (req, res) => {
